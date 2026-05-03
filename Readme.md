@@ -1,1 +1,1 @@
-pr-summarizer-bot
+pr-summarizer-bot new 
