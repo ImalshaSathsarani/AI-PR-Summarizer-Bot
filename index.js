@@ -30,7 +30,12 @@ app.post('/webhook', async (req, res) => {
                 mediaType: {format:'diff'}
             });
 
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            if (!diff || diff.length < 10) {
+             console.log("Diff is too small to summarize.");
+             return; 
+}
+
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
             const prompt = `Summarize the following code changes into 3 clear bullet points for a human reviewer: \n\n ${diff} `;
 
             const result = await model.generateContent(prompt);
