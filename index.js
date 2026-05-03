@@ -1,6 +1,7 @@
 import express from 'express'
 import { Octokit } from 'octokit'
-import { GoogleGenAI } from '@google/genai'
+//import { GoogleGenAI } from '@google/genai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -8,7 +9,7 @@ dotenv.config()
 const app = express();
 app.use(express.json());
 
-const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
 app.post('/webhook', async (req, res) => {
