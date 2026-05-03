@@ -1,6 +1,7 @@
 import express from 'express'
 import { Octokit } from 'octokit'
-import { GoogleGenerativeAI } from "@google/generative-ai";
+//import { GoogleGenAI } from '@google/genai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import dotenv from 'dotenv'
 
 dotenv.config()
