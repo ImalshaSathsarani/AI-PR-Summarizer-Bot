@@ -35,7 +35,7 @@ app.post('/webhook', async (req, res) => {
                return; 
 }
 
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
             const prompt = `You are a senior software engineer. Summarize these code changes into 3 bullet points for a PR human reviewer: \n\n ${diff} `;
 
             // Log this to see if the request actually goes out
@@ -55,6 +55,7 @@ app.post('/webhook', async (req, res) => {
 
         }catch(e){
             console.log('Error processing PR', e)
+            console.error(e.message);
         }
     }
     res.status(200).send('OK');
