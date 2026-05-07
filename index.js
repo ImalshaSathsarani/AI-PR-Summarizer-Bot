@@ -35,8 +35,11 @@ app.post('/webhook', async (req, res) => {
                return; 
 }
 
-            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-            const prompt = `Summarize the following code changes into 3 clear bullet points for a human reviewer: \n\n ${diff} `;
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const prompt = `You are a senior software engineer. Summarize these code changes into 3 bullet points for a PR human reviewer: \n\n ${diff} `;
+
+            // Log this to see if the request actually goes out
+            console.log("Sending diff to Gemini...");
 
             const result = await model.generateContent(prompt);
             const summary = result.response.text();
