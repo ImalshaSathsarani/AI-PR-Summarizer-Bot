@@ -29,7 +29,7 @@ app.post('/webhook', async (req, res) => {
                 pull_number: pullNumber,
                 mediaType: {format:'diff'}
             });
-
+ 
             if (!diff || diff.length < 10) {
                console.log("Diff is too small to summarize.");
                return; 
