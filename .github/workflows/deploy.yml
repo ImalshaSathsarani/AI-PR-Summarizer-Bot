@@ -5,6 +5,8 @@ on:
 
 jobs:
     deploy:
+        env:
+         FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Code
@@ -33,6 +35,6 @@ jobs:
 
             - name: Force ECS Deployment
               run: |
-                aws ecs updated-service --cluster default --service pr-summarizer-bot-a3f8 --force-new-deployment
+                aws ecs update-service --cluster default --service pr-summarizer-bot-a3f8 --force-new-deployment --region ap-south-1
 
 
