@@ -61,6 +61,10 @@ app.post('/webhook', async (req, res) => {
     res.status(200).send('OK');
 });
 
+app.get('/', (req,res)=>{
+    res.status(200).send('Bot is Healthy')
+});
+
 app.listen(process.env.PORT, () => {
     console.log(`Bot is listening on port ${process.env.PORT}`);
 })
