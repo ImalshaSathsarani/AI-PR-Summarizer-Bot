@@ -1,2 +1,18 @@
 node_modules/
 .env
+# Local .terraform directory (contains the 100MB+ provider binaries)
+.terraform/
+
+# Terraform state files (Contains your API keys in plain text!)
+*.tfstate
+*.tfstate.backup
+
+# Terraform lock file (Optional: some teams keep it, but for a solo student project, it's safer to ignore if you move between computers)
+# .terraform.lock.hcl
+
+# Sensitive variable files
+*.tfvars
+*.tfvars.json
+
+# Crash logs
+crash.log

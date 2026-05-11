@@ -1,3 +1,17 @@
-node_modules
+
+# Ignore Git
+.git
+.gitignore
+
+# Ignore all Terraform files
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+.terraform.lock.hcl
+
+# Ignore Node.js local files (since you're a software engineering student, ensure these are here)
+node_modules/
 npm-debug.log
+
+# Ignore local environment files
 .env

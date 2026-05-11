@@ -35,6 +35,6 @@ jobs:
 
             - name: Force ECS Deployment
               run: |
-                aws ecs update-service --cluster default --service pr-summarizer-bot-a3f8 --force-new-deployment --region ap-south-1
+                aws ecs update-service --cluster pr-bot-cluster --service pr-summarizer-bot-service --force-new-deployment --region ap-south-1
 
 
