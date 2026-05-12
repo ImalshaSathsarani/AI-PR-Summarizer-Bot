@@ -21,86 +21,71 @@ provider "aws" {
     region = var.region
 }
 
-# --- 2. IAM ROLES (the Bot's Permissions) ---
-# This allows ECS to pull images from ECR and send logs to CloudWatch
-resource "aws_iam_role" "ecs_task_execution_role" {
-    name = "pr-bot-task-execution-role"
 
-    assume_role_policy = jsonencode({
-        Version = "2012-10-17"
-        Statement = [{
-            Action = "sts:AssumeRole"
-            Effect = "Allow"
-            Principal = { Service = "ecs-tasks.amazonaws.com"}
-        }]
-    })
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_execution_policy" {
-    role = aws_iam_role.ecs_task_execution_role.name
-    policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
-# --- 3. ECR REPOSITORY (The Image Storage) ---
+# --- 2. ECR REPOSITORY (The Image Storage) ---
 resource "aws_ecr_repository" "bot_repo" {
     name = "pr-summarizer-bot"
 }
 
-# --- 4 . ECS CLUSTER & LOGGING ---
-resource "aws_ecs_cluster" "bot_cluster"{
-    name = "pr-bot-cluster"
+# --- 3. SECURITY GROUP ---
+resource "aws_security_group_rule" "allow_k3s_api"{
+    type = "ingress"
+    from_port = 6443
+    to_port = 6443
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    security_group_id = "sg-0e2b51a05d006af52"
 }
 
-resource "aws_cloudwatch_log_group" "bot_logs"{
-    name = "/aws/ecs/default/pr-summarizer-bot-684a-fa0d"
-    retention_in_days = 7
+
+
+resource "aws_security_group_rule" "allow_ssh"{
+    type = "ingress"
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    security_group_id = "sg-0e2b51a05d006af52"
 }
 
-# --- 5. ECS TASK DEFINITION (The Blueprint) ---
-resource "aws_ecs_task_definition" "bot_task" {
-    family = "pr-summarizer-bot-task" 
-    network_mode = "awsvpc"
-    requires_compatibilities = ["FARGATE"]
-    cpu = "256" #0.25 vCPU
-    memory = "512" #0.5 GB
-    execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+# --- 4. EC2 INSTANCE (The K3s Node) ---
+resource "aws_instance" "k3s_node" {
+    ami = "ami-0dee22c13ea7a9a67" # Ubuntu 24.04 LTS in ap-south-1
+    instance_type = "t3.micro"
+    subnet_id = "subnet-050384300e7f328ef"
+    vpc_security_group_ids = ["sg-0e2b51a05d006af52"]
+    associate_public_ip_address = true
 
-    container_definitions = jsonencode ([{
-        name = "bot-container"
-        image = "${aws_ecr_repository.bot_repo.repository_url}:latest"
-        essential= true
-        portMappings = [{
-            containerPort = 3000
-            hostPort = 3000
-        }]
+   user_data = <<-EOF
+                #!/bin/bash
+                # 1. Create a 2GB Swap file to prevent the t3.micro from freezing
+                fallocate -l 2G /swapfile
+                chmod 600 /swapfile
+                mkswap /swapfile
+                swapon /swapfile
+                echo '/swapfile none swap sw 0 0' >> /etc/fstab
 
-        environment = [
-            {name = "PORT", value = "3000" },
-            {name = "GEMINI_API_KEY", value = var.gemini_api_key},
-            {name= "GITHUB_TOKEN", value= var.github_token}
-        ]
-        logConfiguration = {
-            logDriver = "awslogs"
-            options = {
-                "awslogs-group" = aws_cloudwatch_log_group.bot_logs.name
-                "awslogs-region" = var.region
-                "awslogs-stream-prefix" = "ecs"
-            }
-        }
-    }])
+                # 2. Update and install K3s with reduced memory footprint
+                sudo apt-get update -y
+                curl -sfL https://get.k3s.io | sh -s - --disable traefik
+
+                # 3. Wait and setup Kubeconfig
+                sleep 20
+                mkdir -p /home/ubuntu/.kube
+                sudo cp /etc/rancher/k3s/k3s.yaml /home/ubuntu/.kube/config
+                sudo chown ubuntu:ubuntu /home/ubuntu/.kube/config
+                
+                # 4. Map Public IP for remote access
+                PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+                sudo sed -i "s/127.0.0.1/$PUBLIC_IP/g" /home/ubuntu/.kube/config
+                EOF
+    tags = {
+        Name = "k3s-bot-node"
+    }
 }
 
-# ---- 6. ECS SERVICE (The Runner) ----
-resource "aws_ecs_service" "bot_service" {
-    name = "pr-summarizer-bot-service"
-    cluster = aws_ecs_cluster.bot_cluster.id 
-    task_definition = aws_ecs_task_definition.bot_task.arn
-    launch_type     = "FARGATE"
-    desired_count   = 1
-
-    network_configuration {
-    subnets          = ["subnet-050384300e7f328ef"] # Find these in your VPC Console
-    assign_public_ip = true
-    security_groups  = ["sg-0e2b51a05d006af52"] 
-  }
+# --- 5. OUTPUT THE IP ---
+output "k3s_public_ip" {
+  value = aws_instance.k3s_node.public_ip
 }
+

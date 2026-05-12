@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pr-bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pr-bot
+  template:
+    metadata:
+      labels:
+        app: pr-bot
+    spec:
+      containers:
+      - name: bot-container
+        image: 839931787849.dkr.ecr.ap-south-1.amazonaws.com/pr-summarizer-bot:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: PORT
+          value: "3000"
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: bot-secrets
+              key: gemini-api-key
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: bot-secrets
+              key: github-token
+    imagePullSecrets:
+    - name: ecr-registry-key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pr-bot-service
+spec:
+  type: NodePort
+  selector:
+    app: pr-bot
+  ports:
+  - protocol: TCP
+    port: 3000
+    targetPort: 3000
+    nodePort: 30000
