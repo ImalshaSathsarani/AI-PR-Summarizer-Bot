@@ -35,7 +35,7 @@ jobs:
 
             - name: Deploy to EC2 K3s via AWS SSM
               run: |
-                aws ssom send-command \
+                aws ssm send-command \
                   --instance-ids "i-09f1eaba8c5e22626"\
                   --document-name "AWS-RunShellScript" \
                   --region ap-south-1\
