@@ -1,4 +1,4 @@
-name: CI/CD - Deploy to AWS ECS
+name: CI/CD - Deploy to K3s on EC2
 on:
   push:
     branches: [ "main"]
@@ -33,8 +33,16 @@ jobs:
                 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
                 docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-            - name: Force ECS Deployment
+            - name: Deploy to EC2 K3s via AWS SSM
               run: |
-                aws ecs update-service --cluster pr-bot-cluster --service pr-summarizer-bot-service --force-new-deployment --region ap-south-1
-
+                aws ssom send-command \
+                  --instance-ids "i-09f1eaba8c5e22626"\
+                  --document-name "AWS-RunShellScript" \
+                  --region ap-south-1\
+                  --parameters commands='[
+                    "TOKEN=$(aws ecr get-login-password --region ap-south-1)",
+                    "sudo kubectl delete secret ecr-registry-key || true",
+                    "sudo kubectl create secret docker-registry ecr-registry-key --docker-server=839931787849.dkr.ecr.ap-south-1.amazonaws.com --docker-username=AWS --docker-password=$TOKEN --docker-email=none",
+                    "sudo kubectl rollout restart deployment pr-bot"
+                  ]'
 
