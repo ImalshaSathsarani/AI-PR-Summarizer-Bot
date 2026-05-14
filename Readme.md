@@ -50,3 +50,18 @@ add a terraform and tested
 changed main.tf to add sensitive variables
 changed main.tf to add sensitive variables 2 added one brancch
 added to kubernetes
+
+eated test -bot hosted for testing hosted link
+
+created test -bot 2 hosted for testing hosted link
+
+
+add a terraform and tested
+changed main.tf to add sensitive variables
+changed main.tf to add sensitive variables 2 added one brancch
+
+add a terraform and tested
+changed main.tf to add sensitive variables
+changed main.tf to add sensitive variables 2 added one brancch
+added to kubernetes
+chnaged for testing
